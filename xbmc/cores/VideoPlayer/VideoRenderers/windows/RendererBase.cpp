@@ -130,6 +130,13 @@ CRendererBase::CRendererBase(CVideoSettings& videoSettings)
 
 CRendererBase::~CRendererBase()
 {
+  bool hdr_capable, hdr_enabled;
+  DX::DeviceResources::Get()->DetectDisplayHdrCapable(hdr_capable, hdr_enabled);
+
+  if (hdr_enabled && DX::DeviceResources::Get()->Is10BitSwapchain())
+  {
+    DX::DeviceResources::Get()->ClearHdrMetaData();
+  }
   Flush(false);
 }
 
@@ -161,6 +168,23 @@ bool CRendererBase::Configure(const VideoPicture& picture, float fps, unsigned o
   m_sourceHeight = picture.iHeight;
   m_fps = fps;
   m_renderOrientation = orientation;
+
+  if (picture.hasDisplayMetadata || picture.color_primaries == AVCOL_PRI_BT2020)
+  {
+    bool hdr_capable, hdr_enabled;
+
+    DX::DeviceResources::Get()->DetectDisplayHdrCapable(hdr_capable, hdr_enabled);
+
+    if (hdr_enabled)
+    {
+      DX::DeviceResources::Get()->SetHdrMetaData(GetDXIHDRMetaDataFormat(picture));
+    }
+  }
+  else
+  {
+    if (DX::DeviceResources::Get()->Is10BitSwapchain())
+      DX::DeviceResources::Get()->ClearHdrMetaData();
+  }
 
   return true;
 }
@@ -443,4 +467,43 @@ AVPixelFormat CRendererBase::GetAVFormat(DXGI_FORMAT dxgi_format)
   default:
     return AV_PIX_FMT_NONE;
   }
+}
+
+DXGI_HDR_METADATA_HDR10 CRendererBase::GetDXIHDRMetaDataFormat(const VideoPicture& vp)
+{
+  constexpr double FACTOR_1 = 50000.0;
+  constexpr double FACTOR_2 = 10000.0;
+  DXGI_HDR_METADATA_HDR10 hdr10 = {};
+  if (vp.displayMetadata.has_primaries)
+  {
+    hdr10.RedPrimary[0] =
+        static_cast<uint16_t>(FACTOR_1 * av_q2d(vp.displayMetadata.display_primaries[0][0]));
+    hdr10.RedPrimary[1] =
+        static_cast<uint16_t>(FACTOR_1 * av_q2d(vp.displayMetadata.display_primaries[0][1]));
+    hdr10.GreenPrimary[0] =
+        static_cast<uint16_t>(FACTOR_1 * av_q2d(vp.displayMetadata.display_primaries[1][0]));
+    hdr10.GreenPrimary[1] =
+        static_cast<uint16_t>(FACTOR_1 * av_q2d(vp.displayMetadata.display_primaries[1][1]));
+    hdr10.BluePrimary[0] =
+        static_cast<uint16_t>(FACTOR_1 * av_q2d(vp.displayMetadata.display_primaries[2][0]));
+    hdr10.BluePrimary[1] =
+        static_cast<uint16_t>(FACTOR_1 * av_q2d(vp.displayMetadata.display_primaries[2][1]));
+    hdr10.WhitePoint[0] =
+        static_cast<uint16_t>(FACTOR_1 * av_q2d(vp.displayMetadata.white_point[0]));
+    hdr10.WhitePoint[1] =
+        static_cast<uint16_t>(FACTOR_1 * av_q2d(vp.displayMetadata.white_point[1]));
+  }
+  if (vp.displayMetadata.has_luminance)
+  {
+    hdr10.MaxMasteringLuminance =
+        static_cast<uint32_t>(FACTOR_2 * av_q2d(vp.displayMetadata.max_luminance));
+    hdr10.MinMasteringLuminance =
+        static_cast<uint32_t>(FACTOR_2 * av_q2d(vp.displayMetadata.min_luminance));
+  }
+  if (vp.hasLightMetadata)
+  {
+    hdr10.MaxContentLightLevel = static_cast<uint16_t>(vp.lightMetadata.MaxCLL);
+    hdr10.MaxFrameAverageLightLevel = static_cast<uint16_t>(vp.lightMetadata.MaxFALL);
+  }
+  return hdr10;
 }
