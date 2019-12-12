@@ -130,12 +130,12 @@ CRendererBase::CRendererBase(CVideoSettings& videoSettings)
 
 CRendererBase::~CRendererBase()
 {
-  bool hdr_capable, hdr_enabled;
-  DX::DeviceResources::Get()->DetectDisplayHdrCapable(hdr_capable, hdr_enabled);
-
-  if (hdr_enabled && DX::DeviceResources::Get()->Is10BitSwapchain())
+  if (DX::DeviceResources::Get()->Is10BitSwapchain())
   {
-    DX::DeviceResources::Get()->ClearHdrMetaData();
+    if (DX::DeviceResources::Get()->IsDisplayHDREnabled(nullptr))
+    {
+      DX::DeviceResources::Get()->ClearHdrMetaData();
+    }
   }
   Flush(false);
 }
@@ -169,21 +169,20 @@ bool CRendererBase::Configure(const VideoPicture& picture, float fps, unsigned o
   m_fps = fps;
   m_renderOrientation = orientation;
 
-  if (picture.hasDisplayMetadata || picture.color_primaries == AVCOL_PRI_BT2020)
+  if (!DX::DeviceResources::Get()->Is10BitSwapchain())
+    return true;
+
+  if (picture.hasDisplayMetadata && picture.hasLightMetadata &&
+      picture.color_primaries == AVCOL_PRI_BT2020)
   {
-    bool hdr_capable, hdr_enabled;
-
-    DX::DeviceResources::Get()->DetectDisplayHdrCapable(hdr_capable, hdr_enabled);
-
-    if (hdr_enabled)
+    if (DX::DeviceResources::Get()->IsDisplayHDREnabled(nullptr))
     {
-      DX::DeviceResources::Get()->SetHdrMetaData(GetDXIHDRMetaDataFormat(picture));
+      DX::DeviceResources::Get()->SetHdrMetaData(GetDXGIHDR10MetaData(picture));
     }
   }
   else
   {
-    if (DX::DeviceResources::Get()->Is10BitSwapchain())
-      DX::DeviceResources::Get()->ClearHdrMetaData();
+    DX::DeviceResources::Get()->ClearHdrMetaData();
   }
 
   return true;
@@ -469,7 +468,7 @@ AVPixelFormat CRendererBase::GetAVFormat(DXGI_FORMAT dxgi_format)
   }
 }
 
-DXGI_HDR_METADATA_HDR10 CRendererBase::GetDXIHDRMetaDataFormat(const VideoPicture& vp)
+DXGI_HDR_METADATA_HDR10 CRendererBase::GetDXGIHDR10MetaData(const VideoPicture& vp)
 {
   constexpr double FACTOR_1 = 50000.0;
   constexpr double FACTOR_2 = 10000.0;
