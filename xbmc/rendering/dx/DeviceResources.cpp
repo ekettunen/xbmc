@@ -531,10 +531,9 @@ void DX::DeviceResources::ResizeBuffers()
 
     // check if swapchain needs to be recreated
     m_swapChain->GetDesc1(&scDesc);
-    isHdrEnabled = IsDisplayHDREnabled(nullptr);
+    isHdrEnabled = IsDisplayHDREnabled();
 
-    if ((scDesc.Stereo == TRUE) != bHWStereoEnabled ||
-        (!m_Is10bSwapchain && isHdrEnabled))
+    if ((scDesc.Stereo == TRUE) != bHWStereoEnabled || (!m_Is10bSwapchain && isHdrEnabled))
     {
       // check fullscreen state and go to windowing if necessary
       if (!!bFullcreen)
@@ -1114,12 +1113,12 @@ void DX::DeviceResources::Trim() const
 
 #endif
 
-bool DX::DeviceResources::IsDisplayHDREnabled(bool* HDRCapable)
+bool DX::DeviceResources::IsDisplayHDREnabled()
 {
   ComPtr<IDXGIOutput> pOutput;
   ComPtr<IDXGIOutput6> pOutput6;
   DXGI_HDR_METADATA_HDR10 hdr10 = {};
-  DXGI_OUTPUT_DESC1 od;
+  DXGI_OUTPUT_DESC1 od = {};
   bool hdrCapable = false;
   bool hdrEnabled = false;
 
@@ -1174,10 +1173,14 @@ bool DX::DeviceResources::IsDisplayHDREnabled(bool* HDRCapable)
               break;
           }
           CLog::LogF(LOGNOTICE, "ColorSpace = {0:s}", txColorSpace);
-          CLog::LogF(LOGNOTICE, "RedPrimary = {0:0.3f}, {1:0.3f}", od.RedPrimary[0], od.RedPrimary[1]);
-          CLog::LogF(LOGNOTICE, "GreenPrimary = {0:0.3f}, {1:0.3f}", od.GreenPrimary[0], od.GreenPrimary[1]);
-          CLog::LogF(LOGNOTICE, "BluePrimary = {0:0.3f}, {1:0.3f}", od.BluePrimary[0],  od.BluePrimary[1]);
-          CLog::LogF(LOGNOTICE, "WhitePoint = {0:0.3f}, {1:0.3f}", od.WhitePoint[0], od.WhitePoint[1]);
+          CLog::LogF(LOGNOTICE, "RedPrimary = {0:0.3f}, {1:0.3f}", od.RedPrimary[0],
+                     od.RedPrimary[1]);
+          CLog::LogF(LOGNOTICE, "GreenPrimary = {0:0.3f}, {1:0.3f}", od.GreenPrimary[0],
+                     od.GreenPrimary[1]);
+          CLog::LogF(LOGNOTICE, "BluePrimary = {0:0.3f}, {1:0.3f}", od.BluePrimary[0],
+                     od.BluePrimary[1]);
+          CLog::LogF(LOGNOTICE, "WhitePoint = {0:0.3f}, {1:0.3f}", od.WhitePoint[0],
+                     od.WhitePoint[1]);
           CLog::LogF(LOGNOTICE, "MinLuminance = {0:0.4f}", od.MinLuminance);
           CLog::LogF(LOGNOTICE, "MaxLuminance = {0:0.0f}", od.MaxLuminance);
           CLog::LogF(LOGNOTICE, "MaxFullFrameLuminance = {0:0.0f}", od.MaxFullFrameLuminance);
@@ -1191,16 +1194,16 @@ bool DX::DeviceResources::IsDisplayHDREnabled(bool* HDRCapable)
   }
   //Saves Monitor parameters for use later
   m_displayHDR10 = hdr10;
-  if (HDRCapable != nullptr)
-  {
-    *HDRCapable = hdrCapable;
-  }
+
   return hdrEnabled;
 }
 
 void DX::DeviceResources::SetHdrMetaData(DXGI_HDR_METADATA_HDR10& hdr10) const
 {
   ComPtr<IDXGISwapChain4> swapChain4;
+
+  if (m_swapChain == nullptr)
+    return;
 
   if (SUCCEEDED(m_swapChain.As(&swapChain4)))
   {
@@ -1231,12 +1234,35 @@ void DX::DeviceResources::SetHdrMetaData(DXGI_HDR_METADATA_HDR10& hdr10) const
     {
       CLog::LogF(LOGERROR, "DXGI SetHDRMetaData failed");
     }
+  }
+}
 
-    const DXGI_COLOR_SPACE_TYPE cs = DX::Windowing()->UseLimitedColor()
-                                         ? DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020
-                                         : DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
+void DX::DeviceResources::SetColorSpace1(const DXGI_COLOR_SPACE_TYPE colorSpace) const
+{
+  ComPtr<IDXGISwapChain3> swapChain3;
 
-    if (SUCCEEDED(swapChain4->SetColorSpace1(cs)))
+  if (m_swapChain == nullptr)
+    return;
+
+  if (SUCCEEDED(m_swapChain.As(&swapChain3)))
+  {
+    DXGI_COLOR_SPACE_TYPE cs = colorSpace;
+    if (DX::Windowing()->UseLimitedColor())
+    {
+      switch (cs)
+      {
+        case DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709:
+          cs = DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709;
+          break;
+        case DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020:
+          cs = DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020;
+          break;
+        case DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020:
+          cs = DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020;
+          break;
+      }
+    }
+    if (SUCCEEDED(swapChain3->SetColorSpace1(cs)))
     {
       CLog::LogF(LOGDEBUG, "DXGI SetColorSpace1 success");
     }
@@ -1247,18 +1273,33 @@ void DX::DeviceResources::SetHdrMetaData(DXGI_HDR_METADATA_HDR10& hdr10) const
   }
 }
 
-void DX::DeviceResources::ClearHdrMetaData() const
+bool DX::DeviceResources::IsDisplayHDRCapable() const
 {
-  ComPtr<IDXGISwapChain3> swapChain3;
+  ComPtr<IDXGIOutput> pOutput;
+  ComPtr<IDXGIOutput6> pOutput6;
+  DXGI_OUTPUT_DESC1 od = {};
 
-  CLog::LogF(LOGDEBUG, "Restoring SDR rendering");
+  if (m_swapChain == nullptr)
+    return false;
 
-  if (SUCCEEDED(m_swapChain.As(&swapChain3)))
+  if (SUCCEEDED(m_swapChain->GetContainingOutput(pOutput.GetAddressOf())))
   {
-    const DXGI_COLOR_SPACE_TYPE cs = DX::Windowing()->UseLimitedColor()
-                                         ? DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709
-                                         : DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
-
-    swapChain3->SetColorSpace1(cs);
+    if (SUCCEEDED(pOutput.As(&pOutput6)))
+    {
+      if (SUCCEEDED(pOutput6->GetDesc1(&od)))
+      {
+        if (od.MaxLuminance >= 400.0)
+        {
+          CLog::LogF(LOGDEBUG, "Monitor HDR capable detected.");
+          return true;
+        }
+      }
+      else
+      {
+        CLog::LogF(LOGERROR, "DXGI GetDesc1 failed");
+      }
+    }
   }
+
+  return false;
 }

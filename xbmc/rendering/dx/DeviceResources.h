@@ -11,10 +11,8 @@
 #include <wrl.h>
 #include <wrl/client.h>
 #include <concrt.h>
-#if defined(TARGET_WINDOWS_STORE)
 #include <dxgi1_6.h>
-#else
-#include <dxgi1_6.h>
+#if defined(TARGET_WINDOWS_DESKTOP)
 #include <easyhook/easyhook.h>
 #endif
 #include <functional>
@@ -81,9 +79,10 @@ namespace DX
 
     bool SetFullScreen(bool fullscreen, RESOLUTION_INFO& res);
 
-    bool IsDisplayHDREnabled(bool* HDRCapable);
+    bool IsDisplayHDRCapable() const;
+    bool IsDisplayHDREnabled();
     void SetHdrMetaData(DXGI_HDR_METADATA_HDR10& hdr10) const;
-    void ClearHdrMetaData() const;
+    void SetColorSpace1(const DXGI_COLOR_SPACE_TYPE colorSpace) const;
     bool Is10BitSwapchain() const { return m_Is10bSwapchain; }
     DXGI_HDR_METADATA_HDR10 GetHdr10Display() const { return m_displayHDR10; }
 

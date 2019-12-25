@@ -121,7 +121,7 @@ public:
   static DXGI_FORMAT GetDXGIFormat(const VideoPicture &picture);
   static DXGI_FORMAT GetDXGIFormat(CVideoBuffer* videoBuffer);
   static AVPixelFormat GetAVFormat(DXGI_FORMAT dxgi_format);
-  static DXGI_HDR_METADATA_HDR10 GetDXGIHDR10MetaData(const VideoPicture& vp);
+  static DXGI_HDR_METADATA_HDR10 GetDXGIHDR10MetaData(CRenderBuffer* rb);
 
 protected:
   explicit CRendererBase(CVideoSettings& videoSettings);
@@ -146,7 +146,7 @@ protected:
   bool m_useDithering = false;
   bool m_cmsOn = false;
   bool m_clutLoaded = false;
-  
+
   int m_iBufferIndex = 0;
   int m_iNumBuffers = 0;
   int m_iBuffersRequired = 0;
@@ -168,4 +168,10 @@ protected:
   Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_pLUTView;
   CVideoSettings& m_videoSettings;
   std::map<int, CRenderBuffer*> m_renderBuffers;
+
+  DXGI_HDR_METADATA_HDR10 m_lastHdr10 = {};
+  int m_iCntMetaData = 0;
+  bool m_isHdrEnabled = false;
+  bool m_isHlgEnabled = false;
+  bool m_isRec2020Enabled = false;
 };
