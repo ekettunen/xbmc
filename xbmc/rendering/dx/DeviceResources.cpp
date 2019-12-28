@@ -517,7 +517,7 @@ void DX::DeviceResources::ResizeBuffers()
   bool bHWStereoEnabled = RENDER_STEREO_MODE_HARDWAREBASED ==
                           CServiceBroker::GetWinSystem()->GetGfxContext().GetStereoMode();
   bool windowed = true;
-  bool isHdrEnabled = CWIN32Util::IsDisplayHDREnabled();
+  bool isHdrEnabled = DX::Windowing()->IsDisplayHDREnabled();
   HRESULT hr = E_FAIL;
   DXGI_SWAP_CHAIN_DESC1 scDesc = { 0 };
 
@@ -630,13 +630,25 @@ void DX::DeviceResources::ResizeBuffers()
 
     if (swapChainDesc.Format == DXGI_FORMAT_R10G10B10A2_UNORM)
     {
+      std::string txOutput;
       m_Is10bSwapchain = true;
-      CLog::LogF(LOGNOTICE, "10 bit swapchain is used.");
+      if (isHdrEnabled)
+      {
+        m_IsHDROutput = true;
+        txOutput = "HDR";
+      }
+      else
+      {
+        m_IsHDROutput = false;
+        txOutput = "SDR";
+      }
+      CLog::LogF(LOGNOTICE, "10 bit swapchain is used with {0:s} output", txOutput);
     }
     else
     {
       m_Is10bSwapchain = false;
-      CLog::LogF(LOGNOTICE, "8 bit swapchain is used.");
+      m_IsHDROutput = false;
+      CLog::LogF(LOGNOTICE, "8 bit swapchain is used with SDR output");
     }
 
     hr = swapChain.As(&m_swapChain); CHECK_ERR();
@@ -1233,7 +1245,7 @@ void DX::DeviceResources::SetHdrMetaData(DXGI_HDR_METADATA_HDR10& hdr10) const
   }
 }
 
-void DX::DeviceResources::SetColorSpace1(const DXGI_COLOR_SPACE_TYPE colorSpace) const
+void DX::DeviceResources::SetHdrColorSpace(const DXGI_COLOR_SPACE_TYPE colorSpace) const
 {
   ComPtr<IDXGISwapChain3> swapChain3;
 

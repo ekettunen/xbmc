@@ -485,9 +485,9 @@ bool CApplication::Create(const CAppParamParser &params)
   CLog::Log(LOGNOTICE, "%s", CWIN32Util::GetResInfoString().c_str());
   CLog::Log(LOGNOTICE, "Running with %s rights", (CWIN32Util::IsCurrentUserLocalAdministrator() == TRUE) ? "administrator" : "restricted");
   CLog::Log(LOGNOTICE, "Aero is %s", (g_sysinfo.IsAeroDisabled() == true) ? "disabled" : "enabled");
-  if (CWIN32Util::GetHDRDisplayStatus())
+  if (CServiceBroker::GetWinSystem()->GetHDRDisplayStatus())
     CLog::Log(LOGNOTICE, "HDR Display capable is detected and Windows HDR switch is %s",
-              (CWIN32Util::IsDisplayHDREnabled() == true) ? "ON" : "OFF");
+              (CServiceBroker::GetWinSystem()->IsDisplayHDREnabled() == true) ? "ON" : "OFF");
   else
     CLog::Log(LOGNOTICE, "Display is not HDR capable");
 #endif

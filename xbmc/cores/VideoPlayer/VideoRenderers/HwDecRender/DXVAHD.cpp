@@ -514,7 +514,7 @@ bool CProcessorHD::Render(CRect src, CRect dst, ID3D11Resource* target, CRenderB
                                              ? DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709
                                              : DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
 
-    if (DX::DeviceResources::Get()->Is10BitSwapchain())
+    if (DX::DeviceResources::Get()->IsHDROutput())
     {
       if ((views[2]->color_transfer == AVCOL_TRC_SMPTE2084 ||
            views[2]->color_transfer == AVCOL_TRC_ARIB_STD_B67) &&
@@ -538,7 +538,7 @@ bool CProcessorHD::Render(CRect src, CRect dst, ID3D11Resource* target, CRenderB
     // makes target available for processing in shaders
     videoCtx1->VideoProcessorSetOutputShaderUsage(m_pVideoProcessor.Get(), 1);
 
-    if (DX::DeviceResources::Get()->Is10BitSwapchain() && m_bSupportHDR10 &&
+    if (DX::DeviceResources::Get()->IsHDROutput() && m_bSupportHDR10 &&
         views[2]->color_transfer == AVCOL_TRC_SMPTE2084 && views[2]->primaries == AVCOL_PRI_BT2020)
     {
       ComPtr<ID3D11VideoContext2> videoCtx2;

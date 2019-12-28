@@ -160,6 +160,11 @@ public:
 
   static const char* SETTING_WINSYSTEM_IS_HDR_DISPLAY;
 
+  // HDR display support currently implemented
+  static void ToggleWindowsHDR();
+  static int GetHDRDisplayStatus();
+  static bool IsDisplayHDREnabled();
+
 protected:
   void UpdateDesktopResolution(RESOLUTION_INFO& newRes, const std::string &output, int width, int height, float refreshRate, uint32_t dwFlags);
   virtual std::unique_ptr<KODI::WINDOWING::IOSScreenSaver> GetOSScreenSaverImpl() { return nullptr; }
