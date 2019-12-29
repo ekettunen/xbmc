@@ -14,7 +14,6 @@
 #include "windowing/GraphicContext.h"
 #include "messaging/ApplicationMessenger.h"
 #include "platform/win32/CharsetConverter.h"
-#include "platform/win32/WIN32Util.h"
 #include "ServiceBroker.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/SettingsComponent.h"

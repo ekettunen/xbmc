@@ -35,12 +35,6 @@ do { \
   } \
 } while(0);
 
-template<typename T>
-T from_rational(uint64_t default_factor, AVRational rat)
-{
-  return static_cast<T>(default_factor * rat.num / rat.den);
-}
-
 CProcessorHD::CProcessorHD()
 {
   DX::Windowing()->Register(this);

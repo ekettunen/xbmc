@@ -10,7 +10,6 @@
 
 #include "DVDCodecs/Video/DVDVideoCodec.h"
 #include "DVDCodecs/Video/DXVA.h"
-#include "platform/win32/WIN32Util.h"
 #include "Process/VideoBuffer.h"
 #include "VideoRenderers/BaseRenderer.h"
 #include "VideoRenderers/RenderFlags.h"

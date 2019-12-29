@@ -63,5 +63,4 @@ public:
 
   static std::string WUSysMsg(DWORD dwError);
   static bool SetThreadLocalLocale(bool enable = true);
-
 };

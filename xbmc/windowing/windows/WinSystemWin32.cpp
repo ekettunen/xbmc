@@ -1193,4 +1193,3 @@ bool CWinSystemWin32::MessagePump()
 {
   return m_winEvents->MessagePump();
 }
-
