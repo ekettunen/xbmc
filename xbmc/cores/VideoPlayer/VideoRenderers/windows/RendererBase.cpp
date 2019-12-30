@@ -229,14 +229,11 @@ void CRendererBase::Render(CD3DTexture& target, const CRect& sourceRect, const C
       else
       {
         // Sets HDR10 metadata and enables HDR10 color space (switch to HDR rendering)
-        if (DX::Windowing()->IsDisplayHDREnabled())
-        {
-          DX::DeviceResources::Get()->SetHdrMetaData(hdr10);
-          CLog::LogF(LOGNOTICE, "Switching to HDR rendering");
-          DX::DeviceResources::Get()->SetHdrColorSpace(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
-          m_isHdrEnabled = true;
-          m_lastHdr10 = hdr10;
-        }
+        DX::DeviceResources::Get()->SetHdrMetaData(hdr10);
+        CLog::LogF(LOGNOTICE, "Switching to HDR rendering");
+        DX::DeviceResources::Get()->SetHdrColorSpace(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+        m_isHdrEnabled = true;
+        m_lastHdr10 = hdr10;
       }
       m_iCntMetaData = 0;
     }
@@ -245,13 +242,10 @@ void CRendererBase::Render(CD3DTexture& target, const CRect& sourceRect, const C
     {
       if (!m_isHlgEnabled)
       {
-        if (DX::Windowing()->IsDisplayHDREnabled())
-        {
-          // Switch to HLG rendering (internally converts HLG to HDR10)
-          CLog::LogF(LOGNOTICE, "Switching to HLG rendering");
-          DX::DeviceResources::Get()->SetHdrColorSpace(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
-          m_isHlgEnabled = true;
-        }
+        // Switch to HLG rendering (internally converts HLG to HDR10)
+        CLog::LogF(LOGNOTICE, "Switching to HLG rendering");
+        DX::DeviceResources::Get()->SetHdrColorSpace(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+        m_isHlgEnabled = true;
       }
     }
     // Rec. 2020

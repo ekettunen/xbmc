@@ -163,7 +163,6 @@ public:
   // HDR display support currently implemented
   static void ToggleWindowsHDR();
   static int GetHDRDisplayStatus();
-  static bool IsDisplayHDREnabled();
 
 protected:
   void UpdateDesktopResolution(RESOLUTION_INFO& newRes, const std::string &output, int width, int height, float refreshRate, uint32_t dwFlags);

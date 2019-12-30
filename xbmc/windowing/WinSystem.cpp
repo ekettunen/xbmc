@@ -423,11 +423,3 @@ int CWinSystemBase::GetHDRDisplayStatus()
 
   return status;
 }
-
-bool CWinSystemBase::IsDisplayHDREnabled()
-{
-  if (GetHDRDisplayStatus() == 2)
-    return true;
-
-  return false;
-}
