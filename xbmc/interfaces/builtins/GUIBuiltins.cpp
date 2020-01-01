@@ -31,6 +31,9 @@
 #include "utils/URIUtils.h"
 #include "utils/log.h"
 #include "windows/GUIMediaWindow.h"
+#if defined(TARGET_WINDOWS)
+#include "windowing/windows/WinSystemWin32.h"
+#endif
 
 using namespace KODI::MESSAGING;
 
@@ -380,8 +383,9 @@ static int ToggleDirty(const std::vector<std::string>&)
  */
 static int ToggleDisplayHDR(const std::vector<std::string>&)
 {
-  CServiceBroker::GetWinSystem()->ToggleDisplayHDR();
+  dynamic_cast<CWinSystemWin32*>(CServiceBroker::GetWinSystem())->ToggleDisplayHDR();
   CApplicationMessenger::GetInstance().SendMsg(TMSG_RESTARTAPP);
+
   return 0;
 }
 

@@ -34,6 +34,9 @@
 #include "utils/StringUtils.h"
 #include "utils/SystemInfo.h"
 #include "utils/TimeUtils.h"
+#if defined(TARGET_WINDOWS)
+#include "windowing/windows/WinSystemWin32.h"
+#endif
 #include "windowing/WinSystem.h"
 #include "windows/GUIMediaWindow.h"
 
@@ -571,10 +574,10 @@ bool CSystemGUIInfo::GetBool(bool& value, const CGUIListItem *gitem, int context
       value = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_showExitButton;
       return true;
     case SYSTEM_IS_HDR_DISPLAY_OFF:
-      value = (1 == CServiceBroker::GetWinSystem()->GetHDRDisplayStatus());
+      value = (1 == (dynamic_cast<CWinSystemWin32*>(CServiceBroker::GetWinSystem())->GetHDRDisplayStatus()));
       return true;
     case SYSTEM_IS_HDR_DISPLAY_ON:
-      value = (2 == CServiceBroker::GetWinSystem()->GetHDRDisplayStatus());
+      value = (2 == (dynamic_cast<CWinSystemWin32*>(CServiceBroker::GetWinSystem())->GetHDRDisplayStatus()));
       return true;
     case SYSTEM_HAS_LOGINSCREEN:
       value = CServiceBroker::GetSettingsComponent()->GetProfileManager()->UsingLoginScreen();
