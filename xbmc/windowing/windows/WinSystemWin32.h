@@ -125,8 +125,8 @@ public:
   bool IsInSizeMoveMode() const { return m_bSizeMoveEnabled; }
 
   // HDR display support
-  void ToggleDisplayHDR();
-  int GetHDRDisplayStatus();
+  void ToggleDisplayHDR() override;
+  int GetHDRDisplayStatus() override;
 
   // winevents override
   bool MessagePump() override;
